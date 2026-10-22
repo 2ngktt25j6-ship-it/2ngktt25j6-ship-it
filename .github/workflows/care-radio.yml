@@ -1,0 +1,39 @@
+name: 介護ラジオ MP4生成
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/care-radio.yml'
+      - 'make_video.py'
+      - 'dialogue.json'
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
+          python -m pip install --user Pillow
+      - name: Start VOICEVOX engine
+        run: |
+          docker run -d --name voicevox -p 127.0.0.1:50021:50021 voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:50021/version; then exit 0; fi
+            sleep 5
+          done
+          docker logs voicevox
+          exit 1
+      - name: Generate video
+        run: python make_video.py
+      - name: Upload MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: care-radio-mp4
+          path: output/care_radio.mp4
+          if-no-files-found: error
+          retention-days: 7
