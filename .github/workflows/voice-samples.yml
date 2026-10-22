@@ -1,0 +1,30 @@
+name: Voice sample previews
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/voice-samples.yml'
+      - 'voice_samples.py'
+permissions:
+  contents: read
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start VOICEVOX
+        run: |
+          docker run -d --name voicevox -p 127.0.0.1:50021:50021 voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:50021/version; then exit 0; fi
+            sleep 5
+          done
+          exit 1
+      - name: Generate previews
+        run: python voice_samples.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-sample-previews
+          path: voice_samples/*.mp3
+          retention-days: 7
