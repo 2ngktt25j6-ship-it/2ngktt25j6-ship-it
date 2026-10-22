@@ -39,7 +39,7 @@ def slide(i,role,text):
     y=235
     for line in lines:
         d.text((130,y),line,font=bodyfont,fill=(34,44,61));y+=70
-    d.text((104,626),"介護福祉士試験対策ラジオ  |  無料テスト版",font=ImageFont.truetype(FONT,22),fill=(110,120,130))
+    d.text((104,626),"介護福祉士試験対策ラジオ  |  チャンネル紹介",font=ImageFont.truetype(FONT,22),fill=(110,120,130))
     dest=OUT/f"slide_{i:03}.png";im.save(dest);return dest
 def main():
     dialogue=json.loads((ROOT/"dialogue.json").read_text(encoding="utf-8"))
