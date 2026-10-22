@@ -5,6 +5,9 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT=Path(__file__).resolve().parent
 OUT=ROOT/"output"
 OUT.mkdir(exist_ok=True)
+# Regenerate from scratch: never reuse voice or clips from previous runs.
+for stale in list(OUT.glob("voice_*.wav")) + list(OUT.glob("clip_*.mp4")) + [OUT/"care_radio.mp4", OUT/"concat.txt"]:
+    stale.unlink(missing_ok=True)
 FONT="/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
 if not Path(FONT).exists():
     import glob
@@ -53,7 +56,9 @@ def main():
         settings=json.loads(query.decode("utf-8"))
         settings["speedScale"]=1.08
         query=json.dumps(settings,ensure_ascii=False).encode("utf-8")
+        assert speaker in (2,21)
         wav=req("/synthesis?"+urllib.parse.urlencode({"speaker":speaker}),query)
+        if not wav.startswith(b"RIFF"): raise RuntimeError(f"VOICEVOX did not return WAV for turn {i}")
         audio=OUT/f"voice_{i:03}.wav";audio.write_bytes(wav)
         img=slide(i,role,text)
         clip=OUT/f"clip_{i:03}.mp4"
