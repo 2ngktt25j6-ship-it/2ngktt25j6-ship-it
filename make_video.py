@@ -48,8 +48,13 @@ def main():
     for i,turn in enumerate(dialogue):
         role=turn["role"];text=turn["text"]
         if role not in ("女性（質問）","男性（解説）"):raise ValueError("Unknown role: "+role)
-        speaker=2 if role=="女性（質問）" else 3
+        speaker=2 if role=="女性（質問）" else 13
         query=req("/audio_query?"+urllib.parse.urlencode({"text":text,"speaker":speaker}),b"")
+        if role=="男性（解説）":
+            settings=json.loads(query.decode("utf-8"))
+            settings["speedScale"]=0.92
+            settings["intonationScale"]=0.85
+            query=json.dumps(settings,ensure_ascii=False).encode("utf-8")
         wav=req("/synthesis?"+urllib.parse.urlencode({"speaker":speaker}),query)
         audio=OUT/f"voice_{i:03}.wav";audio.write_bytes(wav)
         img=slide(i,role,text)
