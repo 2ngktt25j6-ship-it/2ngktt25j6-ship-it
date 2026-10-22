@@ -28,12 +28,23 @@ jobs:
           done
           docker logs voicevox
           exit 1
-      - name: Generate video
-        run: python make_video.py
+      - name: Generate fresh audio and video
+        run: |
+          rm -rf output
+          python make_video.py
+          test -s output/care_radio.mp4
+          test "$(find output -name 'voice_*.wav' | wc -l)" -eq 8
       - name: Upload MP4
         uses: actions/upload-artifact@v4
         with:
           name: care-radio-mp4
           path: output/care_radio.mp4
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload freshly generated voice tracks
+        uses: actions/upload-artifact@v4
+        with:
+          name: care-radio-voice-wav
+          path: output/voice_*.wav
           if-no-files-found: error
           retention-days: 7
